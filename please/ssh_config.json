@@ -1,0 +1,6 @@
+{
+    "ssh_key": "path/to/ssh/private_key",
+    "ssh_host": "host_to_sync_file_to",
+    "ssh_user": "ssh_user"
+}
+  

@@ -40,6 +40,7 @@ def center_print(text, style: str = None, wrap: bool = False) -> None:
 def write_config(data: dict) -> None:
     with open(os.path.join(config_path, "config.json"), "w") as of:
         of.write(json.dumps(data, indent=2))
+    up_conf_file()
 
 
 def all_tasks_done() -> bool:
@@ -272,13 +273,13 @@ def changequotes(quotes_file: str) -> None:
             for q in quotes:
                 content = q["content"]
                 author = q["author"]
-            
+
             # File is valid, replace the path in the config.json
             config["quotes_file"] = quotes_file
             center_print("Changed quote file to " + quotes_file,
                          COLOR_SUCCESS)
             write_config(config)
-        
+
         #Catch wrong key error exception
         except KeyError:
             center_print(
@@ -427,10 +428,38 @@ def show(ctx: typer.Context) -> None:
 
         print_tasks()
 
+def read_ssh_config():
+    config_path = os.path.join(expanduser("~"), ".config", "please")
+    if not os.path.exists(config_path):
+        os.makedirs(config_path)
+    try:
+        with open(os.path.join(config_path, "ssh_config.json")) as config_file:
+                ssh_config = json.load(config_file)
+                return ssh_config
+    except FileNotFoundError:
+        print("No ssh_config.json found.\nPlease create ssh_config.json in ~/.config/please/ssh_config.json")
+        exit()
+    
 
-def main() -> None:
+def up_conf_file():
+    ssh_config = read_ssh_config()
+    ssh_key = ssh_config['ssh_key']
+    ssh_host = ssh_config['ssh_host']
+    ssh_user = ssh_config['ssh_user']
+    os.system(f"rsync -qavz -e \"ssh -i {ssh_key}\" ~/.config/please/config.json {ssh_user}@{ssh_host}:/home/{ssh_user}/.config/please/config.json")
+
+
+def download_conf_file():
+    ssh_config = read_ssh_config()
+    ssh_key = ssh_config['ssh_key']
+    ssh_host = ssh_config['ssh_host']
+    ssh_user = ssh_config['ssh_user']
+    os.system(f"rsync -qavz -e \"ssh -i {ssh_key}\" {ssh_user}@{ssh_host}:/home/{ssh_user}/.config/please/config.json ~/.config/please/config.json")
+
+def main(lastname: str = typer.Option("")) -> None:
     """Load config file and program initialization."""
     global config_path
+    download_conf_file()
     config_path = os.path.join(expanduser("~"), ".config", "please")
     if not os.path.exists(config_path):
         os.makedirs(config_path)
