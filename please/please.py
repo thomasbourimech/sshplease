@@ -4,6 +4,7 @@ import json
 import os
 import random
 import shutil
+import subprocess
 from os.path import expanduser
 
 import typer
@@ -445,16 +446,27 @@ def up_conf_file():
     ssh_config = read_ssh_config()
     ssh_key = ssh_config['ssh_key']
     ssh_host = ssh_config['ssh_host']
-    ssh_user = ssh_config['ssh_user']
-    os.system(f"rsync -qavz -e \"ssh -i {ssh_key}\" ~/.config/please/config.json {ssh_user}@{ssh_host}:/home/{ssh_user}/.config/please/config.json")
-
+    ssh_user = ssh_config['ssh_user']    
+    try:
+        command = f"/usr/bin/rsync -qavz -e \"ssh -i {ssh_key}\" ~/.config/please/config.json {ssh_user}@{ssh_host}:/home/{ssh_user}/.config/please/config.json"
+        proc = subprocess.run(command, shell=True, check=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        if proc.returncode != 0:
+            print("Could not upload config file to remote host (is path created on remote ssh_host?")
+    except Exception as e:
+        raise(e)
 
 def download_conf_file():
     ssh_config = read_ssh_config()
     ssh_key = ssh_config['ssh_key']
     ssh_host = ssh_config['ssh_host']
     ssh_user = ssh_config['ssh_user']
-    os.system(f"rsync -qavz -e \"ssh -i {ssh_key}\" {ssh_user}@{ssh_host}:/home/{ssh_user}/.config/please/config.json ~/.config/please/config.json")
+    try:
+        command = f"rsync -qavz -e \"ssh -i {ssh_key}\" {ssh_user}@{ssh_host}:/home/{ssh_user}/.config/please/config.json ~/.config/please/config.json"
+        proc = subprocess.run(command, shell=True, check=False, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        if proc.returncode != 0:
+            print("Warning : Could not download config file from remote host (is path created on remote ssh_host?")
+    except Exception as e:
+        raise(e)            
 
 def main(lastname: str = typer.Option("")) -> None:
     """Load config file and program initialization."""
