@@ -3,8 +3,5 @@ venv
 .*
 please/bin
 please/lib
-dist/please_cli-0.3.1-py3-none-any.whl
-dist/please_cli-0.3.1.tar.gz
 please/lib64
-dist/please_cli-0.3.1.tar.gz
 please/pyvenv.cfg
